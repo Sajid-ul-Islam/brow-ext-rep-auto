@@ -1,6 +1,6 @@
 # RepeatFlow data model
 
-Status: M1–M5 data contracts implemented and verified, 2026-09-23. The shell preference, observation sessions, events, candidates, declarative workflows, run checkpoints, run summaries, and messaging protocol are fully implemented. Related documents: [architecture](../arc.md), [rules](../rule.md), [roadmap](../roadmap.md).
+Status: M1–M5 data contracts implemented and verified, 2026-09-23. The shell preference, observation sessions, events, candidates, declarative workflows, run checkpoints, run summaries, and messaging protocol are fully implemented. Related documents: [architecture](arc.md), [rules](rule.md), [roadmap](roadmap.md).
 
 ## 1. Implemented shell preference
 

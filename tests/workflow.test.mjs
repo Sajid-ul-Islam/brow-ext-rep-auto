@@ -7,7 +7,7 @@ import {
   validateLocator,
   createWorkflowFromCandidate,
   requiresConfirmation,
-} from '../extension/lib/workflow.js';
+} from '../lib/workflow.js';
 
 test('validateWorkflow accepts valid declarative workflow', () => {
   const time = '2026-09-23T08:00:00.000Z';

@@ -4,7 +4,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import vm from "node:vm";
 
-const source = await readFile(new URL("../extension/observer.js", import.meta.url), "utf8");
+const source = await readFile(new URL("../observer.js", import.meta.url), "utf8");
 const plain = value => JSON.parse(JSON.stringify(value));
 
 function createHarness({ send, digestGate } = {}) {

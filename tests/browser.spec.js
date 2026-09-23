@@ -26,7 +26,7 @@ test.afterAll(async () => {
 });
 
 test('extension loads unpacked, side panel navigates tabs, manages workflows and settings in Chromium', async () => {
-  const extensionPath = path.resolve('extension');
+  const extensionPath = path.resolve('.');
   const context = await chromium.launchPersistentContext('', {
     channel: 'chromium',
     headless: true,
@@ -141,7 +141,7 @@ test('extension loads unpacked, side panel navigates tabs, manages workflows and
 });
 
 test('repetition candidate conversion into reviewed workflow and preview in side panel', async () => {
-  const extensionPath = path.resolve('extension');
+  const extensionPath = path.resolve('.');
   const context = await chromium.launchPersistentContext('', {
     channel: 'chromium',
     headless: true,

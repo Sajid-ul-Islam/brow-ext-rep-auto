@@ -12,7 +12,7 @@ There are no npm dependencies to install. The check parses the manifest, checks 
 
 ## M0 browser smoke check
 
-1. Open Chrome's extensions manager, enable Developer mode, choose **Load unpacked**, and select the repository's `extension/` directory.
+1. Open Chrome's extensions manager, enable Developer mode, choose **Load unpacked**, and select the repository root directory.
 2. Confirm the extension card has no manifest errors. Pin RepeatFlow and click its toolbar icon. The side panel should open.
 3. Confirm **Not observing**, **Development starter**, and the statement that recording/replay are planned are visible. No permission to read or change websites should be requested.
 4. Toggle **Show the setup guide**. The guide should hide or show, and the status should confirm the preference was saved.
@@ -21,7 +21,7 @@ There are no npm dependencies to install. The check parses the manifest, checks 
 7. Inspect the extension service worker and side panel consoles. There should be no uncaught errors. Only `repeatflow.shell.settings` should be written to local extension storage when the preference changes.
 8. Check keyboard navigation, visible checkbox focus, announced status text, narrow panels (320 px), and 200% zoom. Text should remain readable without horizontal page scrolling.
 
-Serving `extension/sidepanel.html` over localhost is useful for layout inspection. That preview intentionally disables the saved preference and shows a preview message because extension APIs are unavailable. It is not a substitute for the unpacked-extension smoke check.
+Serving `sidepanel.html` over localhost is useful for layout inspection. That preview intentionally disables the saved preference and shows a preview message because extension APIs are unavailable. It is not a substitute for the unpacked-extension smoke check.
 
 ## Tests to add with product behavior
 
@@ -38,11 +38,11 @@ Use local fixture pages and synthetic data. Include a harmless local form that c
 
 ## Evidence log
 
-Keep milestone evidence concrete: revision, browser/version, command or manual scenario, result, and any limitation. The initialization's evidence is recorded here after checks are run. Target budgets and future acceptance criteria in [prd.md](../prd.md) and [roadmap.md](../roadmap.md) are not measured results.
+Keep milestone evidence concrete: revision, browser/version, command or manual scenario, result, and any limitation. The initialization's evidence is recorded here after checks are run. Target budgets and future acceptance criteria in [prd.md](prd.md) and [roadmap.md](roadmap.md) are not measured results.
 
 ### Milestone verification log, 2026-09-23
 
-- `npm run check` passes: Validates Manifest V3 format, permissions (`sidePanel`, `storage`, `activeTab`, `scripting`), zero external packages in `extension/`, local file references, and syntax check across all 18 JS/MJS files and 10 Markdown documents.
+- `npm run check` passes: Validates Manifest V3 format, permissions (`sidePanel`, `storage`, `activeTab`, `scripting`), zero external runtime dependencies, local file references, and syntax check across all 18 JS/MJS files and 10 Markdown documents.
 - `npm test` passes (40 tests):
   - `tests/observer.test.mjs`: Consent, authorization, event minimization, epoch/segment boundaries, queue overflows, and lifecycle boundaries.
   - `tests/repository.test.mjs`: Retention (7 days / 10k events / 250 sessions / 1k run summaries), atomic IndexedDB transactions, corruption fail-close behavior.

@@ -15,7 +15,7 @@ Initial decisions: 2026-09-22. These are practical defaults for starting develop
 | ADR-009 | No automatic retry of uncertain writes | Reduces duplicate submissions after crashes. The user may need to inspect website state before recovery. |
 | ADR-010 | No license grant chosen yet | Package is private and `UNLICENSED`; choose a distribution license before public reuse. |
 
-The side panel is a packaged extension page supported by Chrome's [Side Panel API](https://developer.chrome.com/docs/extensions/reference/api/sidePanel). Permission and lifecycle details are documented in [arc.md](../arc.md).
+The side panel is a packaged extension page supported by Chrome's [Side Panel API](https://developer.chrome.com/docs/extensions/reference/api/sidePanel). Permission and lifecycle details are documented in [arc.md](arc.md).
 
 For a change, append an entry with date, status, context, chosen option, tradeoffs, and which prior decision it supersedes. Keep actual product status in [readme.md](../readme.md).
 

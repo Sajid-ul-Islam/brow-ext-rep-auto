@@ -1,10 +1,10 @@
 # RepeatFlow architecture
 
-Status: architecture specification, updated 2026-09-23. The observation coordinator, observer, normalizer, detector, workflow validator, executor, repository, and side-panel controls across M1–M5 are fully implemented. See [readme.md](readme.md) for current behavior and [roadmap.md](roadmap.md) for delivery gates.
+Status: architecture specification, updated 2026-09-23. The observation coordinator, observer, normalizer, detector, workflow validator, executor, repository, and side-panel controls across M1–M5 are fully implemented. See [readme.md](../readme.md) for current behavior and [roadmap.md](roadmap.md) for delivery gates.
 
 ## 1. Platform and current implementation
 
-Target desktop Chrome 116+ with Manifest V3. Runtime code uses native ES modules and JavaScript/JSDoc; load `extension/` directly without a build step. Node 22+ runs development checks. Edge and Firefox compatibility are unverified.
+Target desktop Chrome 116+ with Manifest V3. Runtime code uses native ES modules and JavaScript/JSDoc; load unpacked directly from the repository root. Node 22+ runs development checks. Edge and Firefox compatibility are unverified.
 
 The packaged side panel is the product's main surface. The module service worker registers a toolbar action handler that calls `sidePanel.open()` within the user gesture and restricts local/session storage to trusted extension contexts. These APIs are available within the chosen baseline. [Chrome Side Panel API](https://developer.chrome.com/docs/extensions/reference/api/sidePanel), [Chrome Storage API](https://developer.chrome.com/docs/extensions/reference/api/storage).
 
@@ -62,7 +62,7 @@ Identify targets with session-scoped opaque keys calculated from a sanitized str
 
 M2 compares normalized symbols `(action, targetKey, fieldKind)` within one session. A candidate requires at least three non-overlapping occurrences of the same contiguous ordered sequence, with length 3–30. Occurrences may have unrelated events between them; each occurrence itself must be contiguous. Overlapping windows cannot inflate the count. Prefer longer candidates, then more occurrences, then earlier first occurrence; suppress a shorter candidate when all its occurrences are covered by an otherwise equivalent longer one. Use exact counts, not fabricated confidence percentages. Detection does not infer input values or prove that two tasks have equivalent business meaning.
 
-Persisted events cannot reconstruct a replay locator. During M3 review, explicitly recapture and preview targets on the live page; if the source document is gone, ask the user to select them again. Only reviewed workflow locators may retain bounded, non-sensitive literal metadata. Contract details are in [docs/data-model.md](docs/data-model.md).
+Persisted events cannot reconstruct a replay locator. During M3 review, explicitly recapture and preview targets on the live page; if the source document is gone, ask the user to select them again. Only reviewed workflow locators may retain bounded, non-sensitive literal metadata. Contract details are in [data-model.md](data-model.md).
 
 ## 5. Lifecycle and state machines
 
@@ -127,4 +127,4 @@ Treat DOM content and content-script messages as untrusted. Validate the sender 
 
 Keep `chrome.storage.local` restricted with `setAccessLevel({ accessLevel: "TRUSTED_CONTEXTS" })`; content scripts submit minimized messages to the coordinator. Store no secrets. No `storage.sync` or network export is used. Local browser data remains accessible to the profile owner and is not a secret vault. [Chrome Storage API](https://developer.chrome.com/docs/extensions/reference/api/storage).
 
-M1 retention is seven days or 10,000 total events and at most 250 session summaries, including empty stopped summaries. Future run retention is 30 days or 1,000 run summaries; workflows until deletion. Prune on writes, startup, and before reads/export so suspension cannot expose expired data. Evict dependent candidate evidence with events. Deletion must cancel affected sessions/runs before removing their records. Exports require preview and deliberate user action and exclude run inputs and observed values by design. See [rule.md](rule.md) and [docs/testing.md](docs/testing.md) for implementation and verification obligations.
+M1 retention is seven days or 10,000 total events and at most 250 session summaries, including empty stopped summaries. Future run retention is 30 days or 1,000 run summaries; workflows until deletion. Prune on writes, startup, and before reads/export so suspension cannot expose expired data. Evict dependent candidate evidence with events. Deletion must cancel affected sessions/runs before removing their records. Exports require preview and deliberate user action and exclude run inputs and observed values by design. See [rule.md](rule.md) and [testing.md](testing.md) for implementation and verification obligations.

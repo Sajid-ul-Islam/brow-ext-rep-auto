@@ -1,6 +1,6 @@
 # RepeatFlow product requirements
 
-Status: product specification, updated 2026-09-23. **All milestones M0–M5 are implemented.** See [readme.md](readme.md) for current capabilities and [roadmap.md](roadmap.md) for milestone details.
+Status: product specification, updated 2026-09-23. **All milestones M0–M5 are implemented.** See [readme.md](../readme.md) for current capabilities and [roadmap.md](roadmap.md) for milestone details.
 
 ## 1. Product direction
 
@@ -101,7 +101,7 @@ M1 uses `activeTab` and `scripting` for explicit current-tab sessions. Free-entr
 
 Passwords, one-time codes, payment details, and secret fields are excluded. When a workflow reaches authentication or another sensitive input, it should pause and let the user act through the website itself.
 
-Browser-local storage is not encrypted by this application and is not a secret vault. Retention, reviewed JSON export, session deletion, clear-all, and minimized capture are implemented in M1. Workflow and run-log requirements remain planned. The proposed event/workflow contract is in [docs/data-model.md](docs/data-model.md).
+Browser-local storage is not encrypted by this application and is not a secret vault. Retention, reviewed JSON export, session deletion, clear-all, and minimized capture are implemented in M1. Workflow and run-log requirements remain planned. The proposed event/workflow contract is in [data-model.md](data-model.md).
 
 ## 7. Quality requirements
 

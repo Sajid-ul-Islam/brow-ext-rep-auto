@@ -4,8 +4,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
 
-const root = fileURLToPath(new URL("../", import.meta.url));
-const extensionRoot = path.join(root, "extension");
+const root = path.resolve(fileURLToPath(new URL("../", import.meta.url)));
+const extensionRoot = root;
 const excluded = new Set([".git", ".kilo", "node_modules", "artifacts", "dist", "coverage", "browser-profile", "test-results"]);
 
 async function walk(directory) {

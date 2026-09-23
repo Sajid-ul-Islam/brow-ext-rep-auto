@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { detectRepetitions, symbolKey } from '../extension/lib/detector.js';
+import { detectRepetitions, symbolKey } from '../lib/detector.js';
 
 function makeEvent(sequence, action, targetKey, fieldKind, segment = 1, sessionId = '00000000-0000-4000-8000-000000000001') {
   return {

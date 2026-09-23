@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { IDBFactory } from 'fake-indexeddb';
-import { createRepository } from '../extension/lib/repository.js';
-import { createCoordinator } from '../extension/lib/coordinator.js';
-import { envelope } from '../extension/lib/protocol.js';
+import { createRepository } from '../lib/repository.js';
+import { createCoordinator } from '../lib/coordinator.js';
+import { envelope } from '../lib/protocol.js';
 
 function harness() {
   const clock = Date.now();

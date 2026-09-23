@@ -30,7 +30,7 @@ Add a pure normalizer and exact contiguous sequence detector using the M1 events
 
 Acceptance: fixtures cover exactly three repeats, only two repeats, overlapping windows, interleaved noise, maximum sequence length, changed targets, and session boundaries. Detection never turns a suggestion into an executable workflow or invents variable values. Bound processing to the retained event budget and measure performance on the agreed fixture.
 
-Status: **Completed.** Implemented in [`extension/lib/detector.js`](extension/lib/detector.js) and verified in [`tests/detector.test.mjs`](tests/detector.test.mjs).
+Status: **Completed.** Implemented in [`lib/detector.js`](../lib/detector.js) and verified in [`tests/detector.test.mjs`](../tests/detector.test.mjs).
 
 ## M3 — Reviewed declarative workflows
 
@@ -38,7 +38,7 @@ Add workflow editing, explicit live target recapture, parameter definitions, loc
 
 Acceptance: users can convert a candidate into a reviewed workflow without needing recorded input values. Invalid steps, executable strings, unknown schema versions, oversized imports, and invalid variable references are rejected. Deleting observations removes candidate evidence without corrupting already saved workflows.
 
-Status: **Completed.** Implemented in [`extension/lib/workflow.js`](extension/lib/workflow.js) and side panel workflow editor, verified in [`tests/workflow.test.mjs`](tests/workflow.test.mjs).
+Status: **Completed.** Implemented in [`lib/workflow.js`](../lib/workflow.js) and side panel workflow editor, verified in [`tests/workflow.test.mjs`](../tests/workflow.test.mjs).
 
 ## M4 — Supervised replay
 
@@ -46,7 +46,7 @@ Implement current-tab run authorization, input collection, target preview, bound
 
 Acceptance: a supported fixture completes a reviewed workflow; missing/ambiguous/hidden targets pause before action; unknown/external effects wait for explicit step confirmation; cancellation prevents the next action. Browser/document replacement, permission loss, and panel closure stop further actions. Tests verify partial completion and `needsAttention` reporting, with no automatic recovery of uncertain writes.
 
-Status: **Completed.** Implemented in [`extension/executor.js`](extension/executor.js) and [`extension/lib/coordinator.js`](extension/lib/coordinator.js), verified in [`tests/coordinator.test.mjs`](tests/coordinator.test.mjs) and [`tests/browser.spec.js`](tests/browser.spec.js).
+Status: **Completed.** Implemented in [`executor.js`](../executor.js) and [`lib/coordinator.js`](../lib/coordinator.js), verified in [`tests/coordinator.test.mjs`](../tests/coordinator.test.mjs) and [`tests/browser.spec.js`](../tests/browser.spec.js).
 
 ## M5 — Browser integration tests and release preparation
 
@@ -63,5 +63,5 @@ Status: **Completed.** Verified via `npm run verify` (`scripts/check.mjs`, `test
 - `npm run test:browser` passes Playwright E2E browser tests on Chromium.
 - Fail closed on invalid schema, stale scope, unknown outcome, or unavailable storage.
 
-See [docs/testing.md](docs/testing.md) for the verification matrix and [arc.md](arc.md) for technical decisions.
+See [testing.md](testing.md) for the verification matrix and [arc.md](arc.md) for technical decisions.
 

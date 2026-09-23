@@ -122,7 +122,7 @@ Stop prevents subsequent actions; it cannot undo completed actions. Completion s
 
 ## 6. State and recovery language
 
-These are product UI states. Persistence enums and message contracts are defined in [docs/data-model.md](docs/data-model.md).
+These are product UI states. Persistence enums and message contracts are defined in [data-model.md](data-model.md).
 
 | State | Suggested copy | Available next action |
 | --- | --- | --- |
@@ -167,6 +167,6 @@ At 320px width, stack controls and wrap content without horizontal page scrollin
 
 Settings should explain the local data categories and their retention in ordinary language. Export opens a review of included categories before generating a file; it must not silently include run-only inputs. Deletion clearly states its scope. Clearing all data requires a concise destructive-action confirmation, ends active work, and reports success only after storage is cleared.
 
-Before each milestone is accepted, exercise its screens with keyboard-only navigation, a narrow panel, empty and long content, permission loss, and storage/error states. For observation and execution, verify the real browser behavior as well as the rendered controls. See [docs/testing.md](docs/testing.md) for the evidence checklist.
+Before each milestone is accepted, exercise its screens with keyboard-only navigation, a narrow panel, empty and long content, permission loss, and storage/error states. For observation and execution, verify the real browser behavior as well as the rendered controls. See [testing.md](testing.md) for the evidence checklist.
 
 The primary open design decisions are the pilot website, the exact reviewed-target selection interaction, and whether persistent site observation is worth its added permission and trust cost. Resolve them using pilot evidence before expanding the initial flow.

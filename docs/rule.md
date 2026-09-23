@@ -4,7 +4,7 @@ Status: foundation rules, 2026-09-22. Applies to code, tests, documentation, and
 
 ## 1. Sources of truth
 
-Read [readme.md](readme.md) for implemented status, [prd.md](prd.md) for product requirements, [arc.md](arc.md) for architecture, and [design.md](design.md) for UX. [roadmap.md](roadmap.md) defines delivery order. Record meaningful architecture changes in [docs/decisions.md](docs/decisions.md).
+Read [readme.md](../readme.md) for implemented status, [prd.md](prd.md) for product requirements, [arc.md](arc.md) for architecture, and [design.md](design.md) for UX. [roadmap.md](roadmap.md) defines delivery order. Record meaningful architecture changes in [decisions.md](decisions.md).
 
 Keep implemented behavior separate from proposed behavior. A UI mockup, passing unit test, or manifest entry is not evidence that recording or replay works in a browser. Update status and acceptance evidence when a milestone ships.
 
@@ -20,7 +20,7 @@ Keep implemented behavior separate from proposed behavior. A UI mockup, passing 
 ## 3. Data boundaries
 
 - Do not record form values, keystrokes, passwords, one-time codes, payment details, clipboard contents, cookies, network payloads, screenshots, or page HTML.
-- Event metadata can still identify a person. Do not persist raw element text, accessible labels, IDs, CSS selectors, or arbitrary attributes as observation metadata. Use the approved minimal model in [docs/data-model.md](docs/data-model.md).
+- Event metadata can still identify a person. Do not persist raw element text, accessible labels, IDs, CSS selectors, or arbitrary attributes as observation metadata. Use the approved minimal model in [data-model.md](data-model.md).
 - Store only origin in observed URL context. User-reviewed workflow routes must strip query strings, fragments, and credentials. Do not assume a path is free of personal data.
 - Store non-secret workflow variables only after explicit review. Run-only inputs must stay ephemeral; request secrets through the website's own UI.
 - Keep MVP data in the local browser. No analytics, external model calls, sync, or backend uploads by default.
@@ -41,7 +41,7 @@ Keep implemented behavior separate from proposed behavior. A UI mockup, passing 
 
 ## 5. Implementation conventions
 
-- Use native ES modules and JavaScript with JSDoc for the foundation. The extension loads directly from `extension/`; Node is for development checks only.
+- Use native ES modules and JavaScript with JSDoc for the foundation. The extension loads directly from the repository root; Node is for development checks only.
 - Keep browser adapters separate from the future pure normalization, matching, and workflow validation modules.
 - Validate message type, size, payload schema, sender extension identity, tab, frame, document, session, and origin at trust boundaries. A page is untrusted even when the user chose it.
 - Register event listeners synchronously when the service worker starts. Persist recoverable state; memory and timers do not guarantee worker continuity.
@@ -56,6 +56,6 @@ Use the state names and interaction rules in [design.md](design.md). Every contr
 
 ## 7. Verification and delivery
 
-Run `npm run check` for every change. Follow [docs/testing.md](docs/testing.md) for browser checks; add meaningful tests as observation, detection, and replay arrive. Future fixes involving privacy, authorization, or replay must include regression coverage for the failure path.
+Run `npm run check` for every change. Follow [testing.md](testing.md) for browser checks; add meaningful tests as observation, detection, and replay arrive. Future fixes involving privacy, authorization, or replay must include regression coverage for the failure path.
 
 Before calling a milestone complete, map evidence to its acceptance criteria, inspect changes for accidental data collection or permission growth, and record what remains untested. Keep the starter usable throughout development. No release dates or performance claims should be presented as measured results without evidence.

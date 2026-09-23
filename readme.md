@@ -4,17 +4,17 @@ A local browser extension for observing repetitive browser tasks, detecting repe
 
 **Current status: M5 — complete local browser extension.** Scoped observation (M1), deterministic repetition suggestions (M2), reviewed declarative workflows (M3), supervised replay with checkpoints (M4), and browser integration verification (M5) are fully implemented.
 
-The runtime targets desktop Chrome 116+ with Manifest V3 and loads directly from `extension/`. Automated test suites include static validation, unit/protocol tests, and Playwright Chromium browser tests.
+The runtime targets desktop Chrome 116+ with Manifest V3 and loads directly from the repository root. Automated test suites include static validation, unit/protocol tests, and Playwright Chromium browser tests.
 
 ## Project documents
 
 | File | Purpose |
 | --- | --- |
-| [prd.md](prd.md) | Product goals, requirements, and acceptance criteria. |
-| [arc.md](arc.md) | Architecture, permission boundaries, and execution design. |
-| [rule.md](rule.md) | Engineering, consent, and data-handling rules. |
-| [design.md](design.md) | Panel UX, review flows, and navigation. |
-| [roadmap.md](roadmap.md) | Delivery milestones and acceptance gates. |
+| [docs/prd.md](docs/prd.md) | Product goals, requirements, and acceptance criteria. |
+| [docs/arc.md](docs/arc.md) | Architecture, permission boundaries, and execution design. |
+| [docs/rule.md](docs/rule.md) | Engineering, consent, and data-handling rules. |
+| [docs/design.md](docs/design.md) | Panel UX, review flows, and navigation. |
+| [docs/roadmap.md](docs/roadmap.md) | Delivery milestones and acceptance gates. |
 | [docs/data-model.md](docs/data-model.md) | Implemented schemas, workflow models, and message protocol. |
 | [docs/decisions.md](docs/decisions.md) | Architecture decisions and tradeoffs. |
 | [docs/testing.md](docs/testing.md) | Automated checks, browser evidence, and manual scenarios. |
@@ -22,7 +22,7 @@ The runtime targets desktop Chrome 116+ with Manifest V3 and loads directly from
 ## Install and use
 
 1. Open `chrome://extensions`, enable **Developer mode**, and choose **Load unpacked**.
-2. Select this repository's **`extension/` directory**, not the repository root.
+2. Select this repository's root directory (`brow-ext-rep-auto`).
 3. Open an ordinary HTTP(S) page. Click the pinned **RepeatFlow** toolbar action (or its shortcut, normally Ctrl+Shift+Y).
 4. The side panel displays five functional tabs:
    - **Observe**: Authorize and record user interactions (`click`, `select`, `checkbox`, `radio`) with Start, Pause, Resume, and Stop controls.
@@ -46,20 +46,20 @@ Data stays in IndexedDB in the local extension profile. Retention is seven days 
 The only permissions are `sidePanel`, `storage`, `activeTab`, and `scripting`. There are no host permissions, background analytics, external services, or remote scripts. CSP enforces `script-src 'self'` and `connect-src 'none'`.
 
 ```text
-extension/
-  manifest.json        # Load this package unpacked
-  background.js        # Browser event adapters & service worker
-  observer.js          # Isolated, consent-scoped interaction capture
-  executor.js          # Isolated, supervised action execution & target preview
-  lib/
-    protocol.js        # Message envelope, schema, and sender validation
-    coordinator.js     # Session, candidate, workflow, and run lifecycle coordinator
-    repository.js      # Atomic IndexedDB storage, pruning, and retention
-    detector.js        # Deterministic sequence normalization and detection
-    workflow.js        # Declarative workflow validation and parameter binding
-  sidepanel.html       # Tabbed UI (Observe, Suggestions, Workflows, Run, Settings)
-  sidepanel.js         # Panel controller and interactive editors
-  sidepanel.css        # Responsive layout and styling
+manifest.json          # Root MV3 manifest
+background.js          # Browser event adapters & service worker
+observer.js            # Isolated, consent-scoped interaction capture
+executor.js            # Isolated, supervised action execution & target preview
+lib/
+  protocol.js          # Message envelope, schema, and sender validation
+  coordinator.js       # Session, candidate, workflow, and run lifecycle coordinator
+  repository.js        # Atomic IndexedDB storage, pruning, and retention
+  detector.js          # Deterministic sequence normalization and detection
+  workflow.js          # Declarative workflow validation and parameter binding
+sidepanel.html         # Tabbed UI (Observe, Suggestions, Workflows, Run, Settings)
+sidepanel.js           # Panel controller and interactive editors
+sidepanel.css          # Responsive layout and styling
+docs/                  # Consolidated project specifications and architecture
 tests/                 # Node.js unit tests and Playwright browser integration tests
 scripts/check.mjs      # Static repository validation
 ```

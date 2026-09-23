@@ -5,7 +5,7 @@ import { IDBFactory } from "fake-indexeddb";
 import {
   createRepository, emptyState, validateState, pruneState,
   RETENTION_MS, MAX_EVENTS, MAX_SESSIONS,
-} from "../extension/lib/repository.js";
+} from "../lib/repository.js";
 
 const NOW = Date.parse("2026-09-23T10:00:00.000Z");
 const iso = (time) => new Date(time).toISOString();
