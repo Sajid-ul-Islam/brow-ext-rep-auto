@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "RepeatFlow — Development Starter",
+  "version": "0.1.0",
+  "description": "Development foundation for discovering and automating repeated browser workflows. Recording and replay are not implemented yet.",
+  "minimum_chrome_version": "116",
+  "permissions": ["sidePanel", "storage"],
+  "incognito": "not_allowed",
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Open RepeatFlow"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'; connect-src 'none'; base-uri 'none'"
+  }
+}
