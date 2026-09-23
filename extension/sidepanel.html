@@ -10,71 +10,207 @@
   </head>
   <body>
     <header class="app-header">
-      <span class="brand-mark" aria-hidden="true">↻</span>
-      <div><p class="brand-name">RepeatFlow</p><p class="caption">Your workflow, fewer repeats.</p></div>
-      <span class="version">M1</span>
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">↻</span>
+        <div><p class="brand-name">RepeatFlow</p><p class="caption">Your workflow, fewer repeats.</p></div>
+      </div>
+      <nav class="nav-tabs" role="tablist" aria-label="Main Navigation">
+        <button id="tab-observe" role="tab" aria-selected="true" aria-controls="view-observe" class="tab-btn active">Observe</button>
+        <button id="tab-suggestions" role="tab" aria-selected="false" aria-controls="view-suggestions" class="tab-btn">Suggestions <span id="badge-suggestions" class="badge" hidden>0</span></button>
+        <button id="tab-workflows" role="tab" aria-selected="false" aria-controls="view-workflows" class="tab-btn">Workflows</button>
+        <button id="tab-run" role="tab" aria-selected="false" aria-controls="view-run" class="tab-btn">Run</button>
+        <button id="tab-settings" role="tab" aria-selected="false" aria-controls="view-settings" class="tab-btn">Settings</button>
+      </nav>
     </header>
+
     <main>
-      <div id="observation-status" class="status" role="status" aria-live="polite"><span class="status-dot" aria-hidden="true"></span><span id="state-label">Observation is off</span></div>
-      <section class="intro" aria-labelledby="observe-heading">
-        <p class="eyebrow">CURRENT-DOCUMENT OBSERVATION</p>
-        <h1 id="observe-heading">Notice the work<br>you repeat.</h1>
-        <p>Choose a page and start a session. You decide when observation begins and ends.</p>
+      <div id="observation-status" class="status" role="status" aria-live="polite">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span id="state-label">Observation is off</span>
+      </div>
+
+      <p id="global-error" class="error" role="alert" hidden></p>
+      <p id="global-status" class="caption operation-status" role="status" aria-live="polite"></p>
+
+      <!-- 1. OBSERVE VIEW -->
+      <section id="view-observe" role="tabpanel" aria-labelledby="tab-observe" class="view-panel">
+        <div class="intro">
+          <p class="eyebrow">CURRENT-DOCUMENT OBSERVATION</p>
+          <h1>Notice the work<br>you repeat.</h1>
+          <p>Choose a page and start a session. You decide when observation begins and ends.</p>
+        </div>
+
+        <section class="card observe-card" aria-labelledby="scope-heading">
+          <div class="section-heading"><h2 id="scope-heading">Observe a task</h2><span class="tag">THIS DOCUMENT ONLY</span></div>
+          <p id="scope-origin" class="origin">No page selected</p>
+          <p id="scope-help" class="caption">Loading the selected page…</p>
+          <p id="session-summary" class="session-summary">No session started.</p>
+          <div class="actions observation-actions">
+            <button id="start-observing" type="button" class="primary" disabled>Start observing</button>
+            <button id="pause-observing" type="button" hidden disabled>Pause</button>
+            <button id="resume-observing" type="button" class="primary" hidden disabled>Resume</button>
+            <button id="stop-observing" type="button" class="danger" hidden disabled>Stop</button>
+          </div>
+        </section>
+
+        <aside class="notice" aria-label="What observation records">
+          <strong>Interaction patterns, without field values.</strong>
+          <p>Records minimized click and change metadata in this browser. No typed values, page text, passwords, clipboard, or screenshots are recorded.</p>
+          <p>Navigation ends the session. Switching tabs pauses it.</p>
+        </aside>
       </section>
-      <section class="card observe-card" aria-labelledby="scope-heading">
-        <div class="section-heading"><h2 id="scope-heading">Observe a task</h2><span class="tag">THIS DOCUMENT ONLY</span></div>
-        <p id="scope-origin" class="origin">No page selected</p>
-        <p id="scope-help" class="caption">Loading the selected page…</p>
-        <p id="session-summary" class="session-summary">No session started.</p>
-        <div class="actions observation-actions">
-          <button id="start-observing" type="button" class="primary" disabled>Start observing</button>
-          <button id="pause-observing" type="button" hidden disabled>Pause</button>
-          <button id="resume-observing" type="button" class="primary" hidden disabled>Resume</button>
-          <button id="stop-observing" type="button" class="danger" hidden disabled>Stop</button>
-        </div>
-        <p id="operation-error" class="error" role="alert" hidden></p>
-        <p id="operation-status" class="caption operation-status" role="status" aria-live="polite"></p>
+
+      <!-- 2. SUGGESTIONS VIEW -->
+      <section id="view-suggestions" role="tabpanel" aria-labelledby="tab-suggestions" class="view-panel" hidden>
+        <div class="section-heading"><h2>Repetition suggestions</h2><span class="tag">M2 DETERMINISTIC</span></div>
+        <p class="caption">When a sequence repeats 3 or more times in a session, suggestions appear here.</p>
+        <p id="suggestions-empty" class="empty">No repeated sequence found in this session yet.</p>
+        <div id="suggestions-list" class="card-list"></div>
       </section>
-      <aside class="notice" aria-label="What observation records">
-        <strong>Interaction patterns, without field values.</strong>
-        <p>Records minimized click and change metadata in this browser. No typed values, page text, passwords, clipboard, or screenshots are recorded.</p>
-        <p>Navigation ends the session. Switching tabs pauses it. Repetition suggestions and replay are planned for later milestones.</p>
-      </aside>
-      <section class="card" aria-labelledby="data-heading">
-        <div class="section-heading"><h2 id="data-heading" tabindex="-1">Local observation data</h2><span id="data-count" class="tag">0 EVENTS</span></div>
-        <p id="retention-help" class="caption section-copy">Kept for up to 7 days and 10,000 events across sessions. Older events expire first.</p>
-        <p id="sessions-empty" class="empty">Your observation sessions will appear here.</p>
-        <ul id="session-list" class="session-list" aria-label="Observation sessions"></ul>
-        <div class="actions">
-          <button id="review-export" type="button" disabled>Review export</button>
-          <button id="clear-data" type="button" class="danger" disabled>Clear all data</button>
+
+      <!-- 3. WORKFLOWS VIEW -->
+      <section id="view-workflows" role="tabpanel" aria-labelledby="tab-workflows" class="view-panel" hidden>
+        <!-- Workflow List -->
+        <div id="workflows-index">
+          <div class="section-heading">
+            <h2>Saved workflows</h2>
+            <div class="header-actions">
+              <button id="create-workflow-btn" type="button" class="small primary">+ New</button>
+              <button id="import-workflow-btn" type="button" class="small">Import</button>
+            </div>
+          </div>
+          <p id="workflows-empty" class="empty">No saved workflows yet. Observe repeated actions or create a workflow.</p>
+          <div id="workflows-list" class="card-list"></div>
         </div>
-        <div id="deletion-review" class="confirmation" role="group" aria-labelledby="deletion-title" hidden>
-          <h3 id="deletion-title">Delete observation data?</h3>
-          <p id="deletion-description"></p>
-          <div class="actions"><button id="confirm-delete" type="button" class="danger">Confirm deletion</button><button id="cancel-delete" type="button">Cancel</button></div>
-        </div>
-        <div id="export-review" class="confirmation" role="group" aria-labelledby="export-title" hidden>
-          <h3 id="export-title">Review this export</h3>
-          <p id="export-summary"></p>
-          <p class="caption">Includes origins, session times and scope, and minimized interaction metadata. Even this metadata can be sensitive. The JSON file stays on your device unless you share it. The setup preference is excluded.</p>
-          <div class="actions"><button id="confirm-export" type="button" class="primary">Download JSON</button><button id="cancel-export" type="button">Cancel</button></div>
+
+        <!-- Workflow Editor -->
+        <div id="workflow-editor" class="editor-view" hidden>
+          <div class="section-heading"><h2 id="editor-title">Edit workflow</h2><button id="editor-close-btn" type="button" class="small">Back</button></div>
+          <div class="form-group">
+            <label for="wf-name">Workflow name</label>
+            <input id="wf-name" type="text" maxlength="120" placeholder="e.g. Filter pending records">
+          </div>
+          <div class="form-group">
+            <label for="wf-origin">Target Origin</label>
+            <input id="wf-origin" type="text" maxlength="2048" placeholder="https://example.com">
+          </div>
+
+          <div class="steps-section">
+            <div class="section-heading"><h3>Steps (<span id="wf-steps-count">0</span>/30)</h3><button id="add-step-btn" type="button" class="small">+ Add step</button></div>
+            <ol id="wf-steps-list" class="editor-steps-list"></ol>
+          </div>
+
+          <div class="params-section">
+            <div class="section-heading"><h3>Parameters</h3><button id="add-param-btn" type="button" class="small">+ Add parameter</button></div>
+            <div id="wf-params-list" class="params-list"></div>
+          </div>
+
+          <div class="actions editor-actions">
+            <button id="save-workflow-btn" type="button" class="primary">Approve & Save</button>
+            <button id="cancel-workflow-btn" type="button">Cancel</button>
+          </div>
+          <p id="editor-review-notice" class="caption notice-inline">Saving approves this revision for supervised execution.</p>
         </div>
       </section>
-      <section class="card setup" aria-labelledby="setup-heading">
-        <h2 id="setup-heading">Getting started</h2>
-        <label class="setting"><input id="show-guide" type="checkbox" checked disabled>Show the setup guide</label>
-        <div id="setup-guide">
-          <ol class="guide-steps">
-            <li>Open an ordinary HTTP or HTTPS page. Click the RepeatFlow toolbar icon on that tab to grant temporary access.</li>
-            <li>Choose <strong>Start observing</strong>, then perform your task normally.</li>
-            <li>Use <strong>Pause</strong> for a break or <strong>Stop</strong> to end the session. Review, export, or delete your local data here.</li>
-          </ol>
-          <p>Only the selected tab and document are observed. Opening this panel does not start a session. Restricted browser pages are unsupported.</p>
+
+      <!-- 4. RUN VIEW -->
+      <section id="view-run" role="tabpanel" aria-labelledby="tab-run" class="view-panel" hidden>
+        <div class="section-heading"><h2>Supervised replay</h2><span class="tag">M4 SUPERVISED</span></div>
+
+        <!-- Run Selector & Preview -->
+        <div id="run-setup-card" class="card">
+          <div class="form-group">
+            <label for="run-workflow-select">Select workflow</label>
+            <select id="run-workflow-select"></select>
+          </div>
+
+          <div id="run-params-container" class="form-group" hidden>
+            <h3>Workflow inputs</h3>
+            <div id="run-inputs-form"></div>
+          </div>
+
+          <div id="run-preview-container" class="preview-box" hidden>
+            <h3>Target preview</h3>
+            <p id="run-preview-summary" class="caption"></p>
+            <ol id="run-preview-steps" class="preview-steps-list"></ol>
+          </div>
+
+          <div class="actions">
+            <button id="preview-run-btn" type="button">Preview on page</button>
+            <button id="start-run-btn" type="button" class="primary" disabled>Start supervised run</button>
+          </div>
         </div>
-        <p id="settings-status" class="caption" role="status" aria-live="polite">Loading local preference…</p>
+
+        <!-- Active Run Progress Dashboard -->
+        <div id="active-run-card" class="card" hidden>
+          <div class="section-heading"><h3 id="active-run-title">Running workflow</h3><span id="active-run-state-badge" class="tag">RUNNING</span></div>
+          <p id="active-run-step-indicator" class="caption">Step 0 of 0</p>
+          <ol id="active-run-steps" class="run-progress-list"></ol>
+
+          <div id="checkpoint-prompt" class="checkpoint-box" hidden>
+            <div class="checkpoint-header"><strong>Action checkpoint</strong></div>
+            <p id="checkpoint-desc" class="caption">This step has external or unknown effects. Confirm to proceed.</p>
+            <div class="actions">
+              <button id="confirm-step-btn" type="button" class="primary">Confirm this step</button>
+              <button id="stop-run-btn" type="button" class="danger">Stop run</button>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button id="pause-run-btn" type="button">Pause</button>
+            <button id="resume-run-btn" type="button" class="primary" hidden>Resume</button>
+            <button id="cancel-run-btn" type="button" class="danger">Stop</button>
+          </div>
+        </div>
       </section>
-      <footer>Stored in this browser. No account or cloud connection.</footer>
+
+      <!-- 5. SETTINGS & DATA VIEW -->
+      <section id="view-settings" role="tabpanel" aria-labelledby="tab-settings" class="view-panel" hidden>
+        <section class="card" aria-labelledby="data-heading">
+          <div class="section-heading"><h2 id="data-heading" tabindex="-1">Local observation data</h2><span id="data-count" class="tag">0 EVENTS</span></div>
+          <p id="retention-help" class="caption section-copy">Kept for up to 7 days and 10,000 events across sessions. Older events expire first.</p>
+          <p id="sessions-empty" class="empty">Your observation sessions will appear here.</p>
+          <ul id="session-list" class="session-list" aria-label="Observation sessions"></ul>
+          <div class="actions">
+            <button id="review-export" type="button" disabled>Review export</button>
+            <button id="clear-data" type="button" class="danger" disabled>Clear all data</button>
+          </div>
+          <div id="deletion-review" class="confirmation" role="group" aria-labelledby="deletion-title" hidden>
+            <h3 id="deletion-title">Delete observation data?</h3>
+            <p id="deletion-description"></p>
+            <div class="actions"><button id="confirm-delete" type="button" class="danger">Confirm deletion</button><button id="cancel-delete" type="button">Cancel</button></div>
+          </div>
+          <div id="export-review" class="confirmation" role="group" aria-labelledby="export-title" hidden>
+            <h3 id="export-title">Review this export</h3>
+            <p id="export-summary"></p>
+            <p class="caption">Includes origins, session times and scope, candidates, workflows, and minimized metadata. The JSON file stays on your device unless you share it.</p>
+            <div class="actions"><button id="confirm-export" type="button" class="primary">Download JSON</button><button id="cancel-export" type="button">Cancel</button></div>
+          </div>
+        </section>
+
+        <!-- Run history summaries -->
+        <section class="card" aria-labelledby="summaries-heading">
+          <div class="section-heading"><h2 id="summaries-heading">Recent run summaries</h2><span class="tag">30-DAY RETENTION</span></div>
+          <p id="summaries-empty" class="empty">No completed runs yet.</p>
+          <ul id="summaries-list" class="session-list"></ul>
+        </section>
+
+        <section class="card setup" aria-labelledby="setup-heading">
+          <h2 id="setup-heading">Getting started</h2>
+          <label class="setting"><input id="show-guide" type="checkbox" checked disabled>Show the setup guide</label>
+          <div id="setup-guide">
+            <ol class="guide-steps">
+              <li>Open an ordinary HTTP or HTTPS page. Click the RepeatFlow toolbar icon on that tab to grant temporary access.</li>
+              <li>Choose <strong>Start observing</strong>, then perform your task normally.</li>
+              <li>Review repetition suggestions, edit workflow steps, and execute supervised runs.</li>
+            </ol>
+            <p>Only the selected tab and document are observed or executed. Opening this panel does not start a session.</p>
+          </div>
+          <p id="settings-status" class="caption" role="status" aria-live="polite">Loading local preference…</p>
+        </section>
+      </section>
+
+      <footer>Stored locally in this browser. No account or cloud connection.</footer>
     </main>
   </body>
 </html>

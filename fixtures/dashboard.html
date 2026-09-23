@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Dashboard Fixture - RepeatFlow</title>
+    <style>
+      body { font-family: system-ui, sans-serif; padding: 24px; max-width: 600px; margin: 0 auto; }
+      .card { border: 1px solid #ccc; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+      .row { margin-bottom: 12px; }
+      label { display: block; font-weight: bold; margin-bottom: 4px; }
+      button { padding: 8px 16px; cursor: pointer; }
+      #log { background: #f4f4f4; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <h1>Operations Dashboard</h1>
+    <div class="card">
+      <div class="row">
+        <button id="open-filters" data-testid="open-filters" type="button">Open filters</button>
+      </div>
+      <div id="filter-panel" class="row">
+        <label for="status-select">Status Filter</label>
+        <select id="status-select" data-testid="status-select">
+          <option value="all">All Records</option>
+          <option value="active">Active Only</option>
+          <option value="pending">Pending Review</option>
+        </select>
+      </div>
+      <div class="row">
+        <label>
+          <input type="checkbox" id="urgent-toggle" data-testid="urgent-toggle">
+          Urgent records only
+        </label>
+      </div>
+      <div class="row">
+        <button id="apply-btn" data-testid="apply-btn" type="button">Apply view</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Action Log</h3>
+      <p>Total applied count: <strong id="apply-count">0</strong></p>
+      <div id="log">Ready</div>
+    </div>
+
+    <script>
+      let count = 0;
+      const countEl = document.getElementById('apply-count');
+      const logEl = document.getElementById('log');
+
+      document.getElementById('open-filters').addEventListener('click', () => {
+        logEl.textContent = 'Filters toggled';
+      });
+
+      document.getElementById('status-select').addEventListener('change', (e) => {
+        logEl.textContent = 'Status changed to: ' + e.target.value;
+      });
+
+      document.getElementById('urgent-toggle').addEventListener('change', (e) => {
+        logEl.textContent = 'Urgent toggle: ' + e.target.checked;
+      });
+
+      document.getElementById('apply-btn').addEventListener('click', () => {
+        count += 1;
+        countEl.textContent = count;
+        logEl.textContent = 'Applied view #' + count;
+      });
+    </script>
+  </body>
+</html>

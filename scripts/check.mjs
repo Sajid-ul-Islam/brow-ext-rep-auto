@@ -6,7 +6,7 @@ import { execFileSync } from "node:child_process";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const extensionRoot = path.join(root, "extension");
-const excluded = new Set([".git", "node_modules", "artifacts", "dist", "coverage", "browser-profile"]);
+const excluded = new Set([".git", ".kilo", "node_modules", "artifacts", "dist", "coverage", "browser-profile", "test-results"]);
 
 async function walk(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -33,12 +33,14 @@ assert.equal(manifest.minimum_chrome_version, "116");
 assert.equal(manifest.background.type, "module");
 assert.equal(manifest.incognito, "not_allowed");
 // Update this gate deliberately when a milestone adds reviewed permissions.
-assert.deepEqual([...manifest.permissions].sort(), ["sidePanel", "storage"].sort());
+assert.deepEqual([...manifest.permissions].sort(), ["sidePanel", "storage", "activeTab", "scripting"].sort());
 for (const permissionKey of ["host_permissions", "optional_host_permissions", "optional_permissions", "content_scripts", "externally_connectable"]) {
-  assert(!Object.hasOwn(manifest, permissionKey), `M0 must not declare ${permissionKey}`);
+  assert(!Object.hasOwn(manifest, permissionKey), `M1-M5 must not declare ${permissionKey}`);
 }
 await requireLocalResource(extensionRoot, manifest.background.service_worker);
 await requireLocalResource(extensionRoot, manifest.side_panel.default_path);
+await requireLocalResource(extensionRoot, "observer.js");
+await requireLocalResource(extensionRoot, "executor.js");
 
 const files = await walk(root);
 let scripts = 0;
@@ -71,5 +73,5 @@ for (const file of files) {
   }
 }
 
-console.log(`Checks passed: MV3 manifest and M0 permissions, packaged resources, ${scripts} JavaScript files, ${documents} Markdown documents and local file links.`);
+console.log(`Checks passed: MV3 manifest and permissions, packaged resources, ${scripts} JavaScript files, ${documents} Markdown documents and local file links.`);
 console.log("Chrome runtime behavior requires the browser smoke check in docs/testing.md.");

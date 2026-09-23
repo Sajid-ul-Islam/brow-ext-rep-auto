@@ -1,6 +1,6 @@
 {
   "name": "repeatflow",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Foundation for a browser extension that learns repeated workflows with user control.",
   "license": "UNLICENSED",
@@ -9,7 +9,10 @@
     "node": ">=22"
   },
   "scripts": {
-    "check": "node scripts/check.mjs"
+    "check": "node scripts/check.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "test:browser": "playwright test",
+    "verify": "npm run check && npm test && npm run test:browser"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",

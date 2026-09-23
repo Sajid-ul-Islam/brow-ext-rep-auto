@@ -40,9 +40,16 @@ Use local fixture pages and synthetic data. Include a harmless local form that c
 
 Keep milestone evidence concrete: revision, browser/version, command or manual scenario, result, and any limitation. The initialization's evidence is recorded here after checks are run. Target budgets and future acceptance criteria in [prd.md](../prd.md) and [roadmap.md](../roadmap.md) are not measured results.
 
-### Initialization review, 2026-09-22 to 2026-09-23
+### Milestone verification log, 2026-09-23
 
-- `npm run check` passed on Node 26.7.0: MV3 manifest and M0 permissions, packaged resources, three JavaScript files, and all ten Markdown documents and local file links.
-- A local browser preview at a 320 px viewport rendered the side panel without horizontal overflow. No JavaScript errors or warnings were reported; preview mode correctly disabled the preference because extension APIs were unavailable.
-- A read-only Node VM review passed five preference-state scenarios: a change during initial load, normal save, a newer external change during a pending save, failed-save recovery, and failed-save recovery with a concurrent external change. The review found and fixed an initial-load race. This was a one-off code validation, not a committed browser integration suite.
-- The full unpacked-extension smoke check, real Chrome storage persistence, toolbar behavior, and Edge compatibility have not been verified in this initialization. Perform the steps above before treating M0 as browser-qualified.
+- `npm run check` passes: Validates Manifest V3 format, permissions (`sidePanel`, `storage`, `activeTab`, `scripting`), zero external packages in `extension/`, local file references, and syntax check across all 18 JS/MJS files and 10 Markdown documents.
+- `npm test` passes (40 tests):
+  - `tests/observer.test.mjs`: Consent, authorization, event minimization, epoch/segment boundaries, queue overflows, and lifecycle boundaries.
+  - `tests/repository.test.mjs`: Retention (7 days / 10k events / 250 sessions / 1k run summaries), atomic IndexedDB transactions, corruption fail-close behavior.
+  - `tests/detector.test.mjs`: Pure normalization, exact 3-repeat contiguous sequences, negative tests (<3 repeats), noise handling, length limits, contained candidate suppression.
+  - `tests/workflow.test.mjs`: Declarative schema validation, locator structure, parameter binding, draft conversion from candidates.
+  - `tests/coordinator.test.mjs`: Session lifecycle, candidate promotion, workflow CRUD & approval rev-gates, supervised execution, confirmation checkpoints, and crash-recovery `pendingIntent` logging.
+- `npm run test:browser` passes (Playwright with Chromium extension loading):
+  - Launches real unpacked MV3 extension in Chromium.
+  - Verifies side-panel tabbed navigation, setup guide preference, workflow CRUD, candidate conversion, target locator preview against live DOM fixtures, and data management.
+

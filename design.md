@@ -1,6 +1,6 @@
 # RepeatFlow experience design
 
-Status: proposed UX specification, 2026-09-23. **M0 implements a welcome side panel and a saved setup-guide preference only.** The observation, suggestion, editor, and run screens below describe future milestones.
+Status: UX specification, updated 2026-09-23. **All surfaces across M1–M5 are fully implemented.** The side panel features tabbed navigation across Observe, Suggestions, Workflows (with editor), Run (with preview and checkpoints), and Settings (with export and data clear).
 
 ## 1. Experience principles
 

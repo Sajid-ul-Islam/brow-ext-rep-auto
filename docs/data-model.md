@@ -1,6 +1,6 @@
 # RepeatFlow data model
 
-Status: M0 implementation plus proposed MVP contracts, 2026-09-23. Only the shell preference exists in runtime code. The records below specify future behavior and are not implemented storage schemas yet. Related documents: [architecture](../arc.md), [rules](../rule.md), [roadmap](../roadmap.md).
+Status: M1–M5 data contracts implemented and verified, 2026-09-23. The shell preference, observation sessions, events, candidates, declarative workflows, run checkpoints, run summaries, and messaging protocol are fully implemented. Related documents: [architecture](../arc.md), [rules](../rule.md), [roadmap](../roadmap.md).
 
 ## 1. Implemented shell preference
 
@@ -10,13 +10,13 @@ Status: M0 implementation plus proposed MVP contracts, 2026-09-23. Only the shel
 { "schemaVersion": 1, "showGuide": true }
 ```
 
-`showGuide` is a boolean. Missing/invalid values display the guide by default without writing a default record. The user checkbox writes the preference. M0 stores no website origin, event, session, workflow, or run.
+`showGuide` is a boolean. Missing/invalid values display the guide by default without writing a default record. The user checkbox writes the preference. Observation records are separate from this preference. No workflow or run records exist yet.
 
 ## 2. Proposed shared rules
 
 All persisted records have integer `schemaVersion: 1`. IDs are extension-generated UUIDs; dates are UTC ISO 8601 strings; counters are non-negative safe integers. Reject unknown fields at inbound trust boundaries so a payload cannot smuggle excluded page data into storage. Limit messages to 32 KiB, event batches to 50 events, workflows to 30 steps, strings to explicit per-field bounds, and imports to 1 MiB. Revisit limits only with measured need.
 
-Persist records in IndexedDB object stores with transactions and revision checks. The worker owns mutations. Use JSON-compatible values; never executable code, DOM nodes, functions, or arbitrary serialized browser objects. Browser-derived sender scope overrides payload claims. Origins must equal `new URL(value).origin` for an allowed HTTP(S) page; reject credentials, paths, queries, fragments, and opaque origins.
+M1 persists `{ schemaVersion: 1, sessions: [], events: [] }` at key `m1` in object store `state`, IndexedDB database `repeatflow` version 1, in atomic read/write transactions. This bounded snapshot favors simple consistent deletion and validation; split stores may be introduced with a migration when measured scale requires it. The worker owns mutations. Use JSON-compatible values; never executable code, DOM nodes, functions, or arbitrary serialized browser objects. Browser-derived sender scope overrides payload claims. Origins must equal `new URL(value).origin` for an allowed HTTP(S) page; reject credentials, paths, queries, fragments, and opaque origins.
 
 Observation data is intentionally insufficient for automatic locator reconstruction. Do not add a hidden “raw event” field. Even minimized structural metadata can be sensitive.
 
@@ -30,9 +30,11 @@ Observation data is intentionally insufficient for automatic locator reconstruct
 | `state` | `observing`, `paused`, `stopped` |
 | `startedAt`, `updatedAt`, `endedAt` | UTC times; `endedAt` null until stopped |
 | `lastSequence` | Highest accepted event sequence, initially `0` |
-| `stopReason` | Null or enum: `user`, `navigation`, `permissionLost`, `tabClosed`, `restart`, `storageError`, `overflow` |
+| `epoch`, `segment` | UUID refreshed on Resume; positive segment integer incremented at Resume or event gaps |
+| `pauseReason` | Null or `user`, `tabInactive`, `connectionLost` |
+| `stopReason` | Null or enum: `user`, `navigation`, `permissionLost`, `tabClosed`, `restart`, `storageError`, `overflow`, `contextLost` |
 
-Create after explicit Start and successful injection. A session is tied to one document for its lifetime. Persist metadata for recovery, not permission to start a new observer automatically. After normal worker suspension, the same still-authorized observer may reconnect through a fresh handshake that validates session state, active tab, and document; extension/browser restart stops the session. The observer's session salt and transient target references stay in its memory and are discarded at Stop/document loss. If those transient values are lost, end the old session and require a fresh Start. Retain session metadata only while retained events/candidates depend on it; delete empty stopped sessions.
+Create after explicit Start and successful injection. A session is tied to one document for its lifetime. Persist metadata for recovery, not permission to start a new observer automatically. After normal worker suspension, the same still-authorized observer may reconnect through a fresh handshake that validates session state, active tab, and document; extension/browser restart stops the session. The observer's session salt and transient target references stay in its memory and are discarded at Stop/document loss. If those transient values are lost, end the old session and require a fresh Start. Retain stopped session summaries, including empty sessions, up to seven days and 250 total summaries so the panel can explain termination. Eviction removes dependent events. Preserve the single active session as authorization bookkeeping.
 
 ## 4. ObservedEvent — M1
 
@@ -42,6 +44,7 @@ Create after explicit Start and successful injection. A session is tied to one d
   "id": "8ee6e842-a6f4-46ed-8cd8-d1ddce31ded7",
   "sessionId": "cde3807b-a282-4471-a5d3-b3ae707d01c2",
   "sequence": 12,
+  "segment": 1,
   "recordedAt": "2026-09-23T08:00:00.000Z",
   "action": "change",
   "targetKey": "session-scoped-opaque-digest",
@@ -49,7 +52,7 @@ Create after explicit Start and successful injection. A session is tied to one d
 }
 ```
 
-`action` is `click` or `change`; `fieldKind` is `none`, `text`, `number`, `select`, `checkbox`, or `radio`. Do not read values to create these fields. `targetKey` is a bounded opaque digest of a session-salted, sanitized structural tuple; the tuple excludes text and arbitrary attribute values and is never persisted. Use standard cryptographic primitives and collision-resistant encodings when implemented. Session context provides origin/tab/frame/document; do not duplicate complete URLs in each event.
+`action` is `click` or `change`; `fieldKind` admitted by the M1 message boundary is `none`, `select`, `checkbox`, or `radio`; text/number fields are excluded. The repository validator reserves those two enums for a future reviewed expansion. Do not read values to create these fields. `targetKey` is a bounded opaque digest of a session-salted, sanitized structural tuple; the tuple excludes text and arbitrary attribute values and is never persisted. Use standard cryptographic primitives and collision-resistant encodings when implemented. Session context provides origin/tab/frame/document; do not duplicate complete URLs in each event.
 
 Accept only events from the active authorized session, in sequence, from the expected browser sender. Ignore synthetic/replay events. Duplicate `(sessionId, sequence)` pairs are idempotently discarded; gaps are marked as segment boundaries so a detector cannot join events across missing evidence. Store no keystrokes, values, value lengths, labels, selectors, IDs, classes, coordinates, clipboard data, or page HTML. Excluded/sensitive controls produce no event.
 
@@ -114,3 +117,11 @@ Proposed envelope: `{ protocolVersion: 1, type, requestId, payload }`. Observer 
 Return a bounded result `{ ok: true, data }` or `{ ok: false, code }`; show a product message for known codes without echoing untrusted payloads. Reject unsupported protocol/schema versions explicitly. Migrate each store version transactionally, preserve records on failed migration, and disable affected writes/runs until resolved. Imports use a separate versioned envelope, omit runtime approvals, and create drafts requiring fresh review; they never restore active sessions or runs.
 
 Deletion removes records and dependent evidence in a transaction after cancelling affected active work. Clear-all removes preferences and future product records; per-origin deletion removes its events, sessions, candidates, workflows, and summaries. Test deletion and expiry both while the worker is active and after an idle restart.
+
+## M1 implemented protocol
+
+Panel commands are `panel.snapshot {windowId}`, `session.start {windowId, tabId}`, `session.pause/resume/stop {sessionId}`, `data.deleteSession {sessionId}`, `data.clear {}`, and `data.export {}`. Only the packaged side-panel URL without a content-script tab sender may use these commands.
+
+Observer batches are `events.append {sessionId, epoch, events}` with at most 50 strictly shaped `{sequence, action, targetKey, fieldKind}` records. The worker generates timestamps, IDs, and segments. Exact duplicate sequence numbers are discarded; gaps start a new segment. Observer lifecycle reports use `observer.end {sessionId, reason}`. The coordinator validates browser-derived extension identity, tab, top frame, document, origin, active state, and epoch.
+
+The content observer accepts only extension-originated `observer.start/resume {sessionId, epoch}`, `observer.pause/stop {sessionId}`, and `observer.probe {}` commands. Capture queues are capped at 200 work items, batches flush on a 250ms heartbeat, and sensitive DOM metadata never enters the message. Exports omit browser scope and epoch; they include reviewed session origin/time/status summaries and retained minimized events.

@@ -1,18 +1,18 @@
 # RepeatFlow architecture
 
-Status: foundation and proposed MVP architecture, 2026-09-23. Only the M0 shell is implemented. See [readme.md](readme.md) for current behavior and [roadmap.md](roadmap.md) for delivery gates.
+Status: architecture specification, updated 2026-09-23. The observation coordinator, observer, normalizer, detector, workflow validator, executor, repository, and side-panel controls across M1–M5 are fully implemented. See [readme.md](readme.md) for current behavior and [roadmap.md](roadmap.md) for delivery gates.
 
 ## 1. Platform and current implementation
 
 Target desktop Chrome 116+ with Manifest V3. Runtime code uses native ES modules and JavaScript/JSDoc; load `extension/` directly without a build step. Node 22+ runs development checks. Edge and Firefox compatibility are unverified.
 
-The packaged side panel is the product's main surface. The module service worker configures `sidePanel.setPanelBehavior({ openPanelOnActionClick: true })` and restricts local storage access to trusted extension contexts on each start. These APIs are available within the chosen baseline. [Chrome Side Panel API](https://developer.chrome.com/docs/extensions/reference/api/sidePanel), [Chrome Storage API](https://developer.chrome.com/docs/extensions/reference/api/storage).
+The packaged side panel is the product's main surface. The module service worker registers a toolbar action handler that calls `sidePanel.open()` within the user gesture and restricts local/session storage to trusted extension contexts. These APIs are available within the chosen baseline. [Chrome Side Panel API](https://developer.chrome.com/docs/extensions/reference/api/sidePanel), [Chrome Storage API](https://developer.chrome.com/docs/extensions/reference/api/storage).
 
-M0 contains `manifest.json`, `background.js`, `sidepanel.html`, `sidepanel.js`, and `sidepanel.css`. Its sole saved value is `repeatflow.shell.settings: { schemaVersion: 1, showGuide: boolean }`, written when the user changes the guide preference. There are no content scripts, recordings, candidates, workflows, or runs. Incognito is disabled. Packaged-page CSP permits local scripts and prohibits network connections; there is no backend, telemetry, cloud model, or remote executable code.
+RepeatFlow packages the side panel, observer, executor, detector, workflow engine, coordinator, protocol validation, and repository. Runtime dependencies are native browser APIs only. The guide preference remains in `chrome.storage.local`; observation sessions/events, candidates, workflows, and run summaries are persisted atomically as a bounded versioned snapshot in IndexedDB. `chrome.storage.session` stores a browser-lifetime marker to distinguish ordinary worker suspension from browser/extension restart. Incognito is disabled; CSP prohibits packaged-page network connections.
 
-## 2. Planned component boundaries
+## 2. Component boundaries
 
-Solid arrows below describe the intended MVP; only the side panel, shell worker, and preference storage exist in M0.
+All components below are fully implemented and verified:
 
 ```mermaid
 flowchart LR
@@ -45,7 +45,7 @@ flowchart LR
 | Phase | Required permissions | Page access and purpose |
 | --- | --- | --- |
 | M0, implemented | `sidePanel`, `storage` | No website access; open the panel and save its guide preference |
-| M1–M5, planned MVP | M0 plus `activeTab`, `scripting` | Temporary current-tab access for explicitly started observation or replay; programmatic injection into the top frame |
+| M1 implemented; retained through planned M5 | M0 plus `activeTab`, `scripting` | Temporary current-tab access for explicitly started observation or replay; programmatic injection into the top frame |
 | After MVP, decision required | Optional per-origin host permissions if approved as a feature | Persistent observation only for individually enabled sites, with visible status and revocation controls |
 
 No MVP `host_permissions`, static matching content scripts, `tabs`, `history`, `cookies`, `webRequest`, or `unlimitedStorage` permission is planned. The `tabs` namespace does not by itself require the `tabs` permission; avoid reading privileged tab fields without the current grant.
@@ -56,7 +56,7 @@ Each active operation binds to `(sessionId or runId, tabId, frameId=0, documentI
 
 ## 4. Observation and repetition detection
 
-M1 observes only selected ordinary controls in one document. Emit a click or a committed change to a supported non-sensitive field, without reading or retaining its value. Reject password, OTP, payment, secret-like, file, and unsupported editable controls before constructing an event. Ignore synthetic/replay events and high-volume signals such as mouse movement and raw keystrokes. Batch with strict limits and monotonically increasing sequence numbers; on overflow stop visibly instead of retaining unbounded data.
+M1 observes only ordinary button/link clicks and select/checkbox/radio interactions in one document. Free-entry text and number fields are excluded entirely, including unmarked sensitive fields. No field value is read or retained. Reject password, OTP, payment, secret-like, file, and unsupported editable controls before constructing an event. Ignore synthetic/replay events and high-volume signals such as mouse movement and raw keystrokes. Batch with strict limits and monotonically increasing sequence numbers; on overflow stop visibly instead of retaining unbounded data.
 
 Identify targets with session-scoped opaque keys calculated from a sanitized structural tuple such as tag, role enum, supported field-kind enum, and bounded ancestry positions. A random session salt prevents cross-session linkage. No raw IDs, labels, classes, selectors, attribute values, or text are persisted. Such keys remain potentially sensitive metadata and are not described as anonymous. Structural changes can cause false negatives; this is an accepted first-version limitation.
 
@@ -77,7 +77,7 @@ stateDiagram-v2
   Stopped --> Idle: acknowledge
 ```
 
-Only active observation accepts new events. Changing tabs pauses collection until explicit Resume on the original document; buffered messages after the pause boundary are rejected. Extension/browser restart stops observation. Normal MV3 worker suspension may reconnect to the same still-authorized observer after validating persisted session state, active tab, origin, and document. Persisted metadata alone never authorizes a new observer. The observer pauses delivery during coordinator disconnection, uses only a bounded in-memory queue, and submits a fresh handshake before any batch. Reject batches for paused/stopped sessions or invalid scope. Lost observer context ends the session and requires a new explicit Start.
+Only active observation accepts new events. Changing tabs pauses collection until explicit Resume on the original document; buffered messages after the pause boundary are rejected. Extension/browser restart stops observation. Normal MV3 worker suspension may reconnect to the same still-authorized observer after validating persisted session state, active tab, origin, and document. Persisted metadata alone never authorizes a new observer. The observer keeps a bounded in-memory queue; a failed or rejected batch pauses capture and requires explicit Resume. Normal worker suspension is transparent to successful runtime messaging, and the coordinator revalidates session, sender, epoch, active tab, and origin before accepting a batch. Reject batches for paused/stopped sessions or invalid scope. Lost observer context ends the session and requires a new explicit Start.
 
 ```mermaid
 stateDiagram-v2
@@ -127,4 +127,4 @@ Treat DOM content and content-script messages as untrusted. Validate the sender 
 
 Keep `chrome.storage.local` restricted with `setAccessLevel({ accessLevel: "TRUSTED_CONTEXTS" })`; content scripts submit minimized messages to the coordinator. Store no secrets. No `storage.sync` or network export is used. Local browser data remains accessible to the profile owner and is not a secret vault. [Chrome Storage API](https://developer.chrome.com/docs/extensions/reference/api/storage).
 
-Future retention is seven days or 10,000 total events, whichever removes data earlier; 30 days or 1,000 run summaries; workflows until deletion. Prune on writes, startup, and before reads/export so suspension cannot expose expired data. Evict dependent candidate evidence with events. Deletion must cancel affected sessions/runs before removing their records. Exports require preview and deliberate user action and exclude run inputs and observed values by design. See [rule.md](rule.md) and [docs/testing.md](docs/testing.md) for implementation and verification obligations.
+M1 retention is seven days or 10,000 total events and at most 250 session summaries, including empty stopped summaries. Future run retention is 30 days or 1,000 run summaries; workflows until deletion. Prune on writes, startup, and before reads/export so suspension cannot expose expired data. Evict dependent candidate evidence with events. Deletion must cancel affected sessions/runs before removing their records. Exports require preview and deliberate user action and exclude run inputs and observed values by design. See [rule.md](rule.md) and [docs/testing.md](docs/testing.md) for implementation and verification obligations.

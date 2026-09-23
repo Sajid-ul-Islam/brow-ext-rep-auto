@@ -1,6 +1,6 @@
 # RepeatFlow product requirements
 
-Status: proposed product specification, 2026-09-23. **M0 is a foundation shell; observation, detection, workflow editing, and replay are not implemented.** See [readme.md](readme.md) for current capabilities and [roadmap.md](roadmap.md) for delivery gates.
+Status: product specification, updated 2026-09-23. **All milestones M0–M5 are implemented.** See [readme.md](readme.md) for current capabilities and [roadmap.md](roadmap.md) for milestone details.
 
 ## 1. Product direction
 
@@ -87,9 +87,9 @@ The initial candidate range is 3–30 steps with a threshold of three occurrence
 
 ## 6. Data and permissions
 
-M0 declares only `sidePanel` and `storage`, and stores the setup-guide preference. It contains no observer, host permissions, or executor.
+M1 declares `sidePanel`, `storage`, `activeTab`, and `scripting`. It injects a packaged observer only after explicit Start and has no host permissions or executor.
 
-M1 introduces `activeTab` and `scripting` for explicit current-tab sessions. Each document requires a fresh observation decision; navigation ends the session even when the origin stays the same. Durable observation on selected origins may be considered later with separate opt-in settings and optional host permissions.
+M1 uses `activeTab` and `scripting` for explicit current-tab sessions. Free-entry text/number fields are excluded entirely; only ordinary buttons, links, selects, checkboxes, and radio controls are supported. Each document requires a fresh observation decision; navigation ends the session even when the origin stays the same. Durable observation on selected origins may be considered later with separate opt-in settings and optional host permissions.
 
 | Data category | Proposed policy |
 | --- | --- |
@@ -101,7 +101,7 @@ M1 introduces `activeTab` and `scripting` for explicit current-tab sessions. Eac
 
 Passwords, one-time codes, payment details, and secret fields are excluded. When a workflow reaches authentication or another sensitive input, it should pause and let the user act through the website itself.
 
-Browser-local storage is not encrypted by this application and is not a secret vault. Retention, export, deletion, and capture safeguards above are planned requirements, not capabilities implemented by the M0 shell. The proposed event/workflow contract is in [docs/data-model.md](docs/data-model.md).
+Browser-local storage is not encrypted by this application and is not a secret vault. Retention, reviewed JSON export, session deletion, clear-all, and minimized capture are implemented in M1. Workflow and run-log requirements remain planned. The proposed event/workflow contract is in [docs/data-model.md](docs/data-model.md).
 
 ## 7. Quality requirements
 

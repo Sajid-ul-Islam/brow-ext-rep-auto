@@ -1,10 +1,15 @@
 {
   "manifest_version": 3,
-  "name": "RepeatFlow — Development Starter",
-  "version": "0.1.0",
-  "description": "Development foundation for discovering and automating repeated browser workflows. Recording and replay are not implemented yet.",
+  "name": "RepeatFlow",
+  "version": "0.2.0",
+  "description": "Observe a browser task with explicit Start, Pause, and Stop controls. Local metadata only; detection and replay are planned.",
   "minimum_chrome_version": "116",
-  "permissions": ["sidePanel", "storage"],
+  "permissions": [
+    "sidePanel",
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
   "incognito": "not_allowed",
   "background": {
     "service_worker": "background.js",
@@ -18,5 +23,13 @@
   },
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'none'; connect-src 'none'; base-uri 'none'"
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Y",
+        "mac": "Command+Shift+Y"
+      }
+    }
   }
 }
