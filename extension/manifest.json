@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "RepeatFlow",
   "version": "0.2.0",
-  "description": "Observe a browser task with explicit Start, Pause, and Stop controls. Local metadata only; detection and replay are planned.",
+  "description": "Observe repetitive browser tasks, detect repeated patterns, create reviewed declarative workflows, and execute supervised replays.",
   "minimum_chrome_version": "116",
   "permissions": [
     "sidePanel",
