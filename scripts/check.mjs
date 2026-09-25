@@ -41,6 +41,16 @@ await requireLocalResource(extensionRoot, manifest.background.service_worker);
 await requireLocalResource(extensionRoot, manifest.side_panel.default_path);
 await requireLocalResource(extensionRoot, "observer.js");
 await requireLocalResource(extensionRoot, "executor.js");
+if (manifest.icons) {
+  for (const size of Object.keys(manifest.icons)) {
+    await requireLocalResource(extensionRoot, manifest.icons[size]);
+  }
+}
+if (manifest.action?.default_icon) {
+  for (const size of Object.keys(manifest.action.default_icon)) {
+    await requireLocalResource(extensionRoot, manifest.action.default_icon[size]);
+  }
+}
 
 const files = await walk(root);
 let scripts = 0;
