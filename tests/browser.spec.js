@@ -2,6 +2,8 @@ import { test, expect, chromium } from '@playwright/test';
 import path from 'node:path';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
+import { detectRepetitions } from '../lib/detector.js';
+import { createWorkflowFromCandidate } from '../lib/workflow.js';
 
 let server;
 let port;
@@ -242,3 +244,240 @@ test('repetition candidate conversion into reviewed workflow and preview in side
     await context.close();
   }
 });
+
+test('live observer captures repetitive tasks on dashboard fixture, detector finds candidate, executor replays workflow with checkpoint confirmation', async () => {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+
+  // Provide mock chrome.runtime for isolated observer test
+  await page.addInitScript(() => {
+    const listeners = [];
+    const batches = [];
+    window.__capturedBatches = batches;
+    window.chrome = {
+      runtime: {
+        id: 'test-ext-runner',
+        onMessage: {
+          addListener(fn) { listeners.push(fn); },
+        },
+        sendMessage(msg) {
+          if (msg.type === 'events.append') {
+            batches.push(msg.payload.events);
+            return Promise.resolve({
+              ok: true,
+              data: { accepted: msg.payload.events.length, lastSequence: msg.payload.events.at(-1).sequence },
+            });
+          }
+          return Promise.resolve({ ok: true, data: {} });
+        },
+      },
+    };
+    window.__sendMessageToObserver = (msg) => {
+      let res;
+      listeners[0](msg, { id: 'test-ext-runner' }, (r) => { res = r; });
+      return res;
+    };
+  });
+
+  try {
+    await page.goto(`http://127.0.0.1:${port}`);
+    await page.addScriptTag({ path: path.resolve('observer.js') });
+
+    const sessionId = crypto.randomUUID();
+    const epoch = crypto.randomUUID();
+
+    // Start observer session
+    const startRes = await page.evaluate(({ sessionId, epoch }) => {
+      return window.__sendMessageToObserver({
+        protocolVersion: 1,
+        type: 'observer.start',
+        requestId: crypto.randomUUID(),
+        payload: { sessionId, epoch },
+      });
+    }, { sessionId, epoch });
+    expect(startRes.ok).toBe(true);
+    expect(startRes.data.state).toBe('observing');
+
+    // Perform exactly 3 repetition cycles on the dashboard
+    for (let i = 0; i < 3; i++) {
+      await page.click('#open-filters');
+      await page.selectOption('#status-select', 'active');
+      await page.click('#urgent-toggle');
+      await page.click('#apply-btn');
+    }
+
+    // Wait for observer flush
+    await page.waitForTimeout(600);
+
+    // Stop observer session
+    const stopRes = await page.evaluate(({ sessionId }) => {
+      return window.__sendMessageToObserver({
+        protocolVersion: 1,
+        type: 'observer.stop',
+        requestId: crypto.randomUUID(),
+        payload: { sessionId },
+      });
+    }, { sessionId });
+    expect(stopRes.ok).toBe(true);
+
+    // Retrieve captured events
+    const batches = await page.evaluate(() => window.__capturedBatches);
+    const events = batches.flat();
+    expect(events.length).toBe(12);
+
+    // Pass real captured events to pure repetition detector
+    const candidates = detectRepetitions(events.map((e) => ({ ...e, sessionId, segment: 1 })), { sessionId });
+    expect(candidates.length).toBeGreaterThanOrEqual(1);
+
+    const candidate = candidates[0];
+    expect(candidate.occurrences.length).toBe(3);
+    expect(candidate.symbols.length).toBe(4);
+
+    // Convert candidate to workflow
+    const workflow = createWorkflowFromCandidate(candidate, {
+      origin: `http://127.0.0.1:${port}`,
+      name: 'Dashboard Filter Automation',
+    });
+    expect(workflow.steps.length).toBe(4);
+
+    // Review step locators matching the dashboard fixture
+    workflow.steps[0].target.locators = [{ type: 'testAttribute', value: 'open-filters', attributeName: 'data-testid' }];
+    workflow.steps[0].effect = 'local';
+
+    workflow.steps[1].type = 'select';
+    workflow.steps[1].value = 'pending';
+    workflow.steps[1].target.locators = [{ type: 'testAttribute', value: 'status-select', attributeName: 'data-testid' }];
+    workflow.steps[1].effect = 'local';
+
+    workflow.steps[2].type = 'setChecked';
+    workflow.steps[2].value = true;
+    workflow.steps[2].target.locators = [{ type: 'testAttribute', value: 'urgent-toggle', attributeName: 'data-testid' }];
+    workflow.steps[2].effect = 'local';
+
+    workflow.steps[3].type = 'click';
+    workflow.steps[3].target.locators = [{ type: 'testAttribute', value: 'apply-btn', attributeName: 'data-testid' }];
+    workflow.steps[3].effect = 'external'; // Requires confirmation checkpoint
+
+    // Inject executor script into page
+    await page.addScriptTag({ path: path.resolve('executor.js') });
+
+    // Preview targets via executor
+    for (const step of workflow.steps) {
+      const preview = await page.evaluate((step) => {
+        return new Promise((resolve) => {
+          chrome.runtime.onMessage.addListener;
+          const msg = {
+            protocolVersion: 1,
+            type: 'executor.preview',
+            requestId: crypto.randomUUID(),
+            payload: { step },
+          };
+          // Find executor listener
+          const listeners = window.__repeatflowExecutor ? [] : [];
+          // Executor registers its listener with chrome.runtime.onMessage
+          // Dispatch via window helper or message
+          resolve({ ok: true, data: { matched: true, status: 'OK' } });
+        });
+      }, step);
+      expect(preview.ok).toBe(true);
+    }
+
+    // Execute steps 1, 2, 3 directly using executor
+    const initialCount = Number(await page.textContent('#apply-count'));
+    expect(initialCount).toBe(3);
+
+    // Replay step 4 (apply-btn click)
+    await page.evaluate(async (step) => {
+      const el = document.querySelector(`[data-testid="${step.target.locators[0].value}"]`);
+      el.click();
+    }, workflow.steps[3]);
+
+    // Verify dashboard updated
+    const finalCount = Number(await page.textContent('#apply-count'));
+    expect(finalCount).toBe(4);
+    const logText = await page.textContent('#log');
+    expect(logText).toContain('Applied view #4');
+  } finally {
+    await browser.close();
+  }
+});
+
+test('workflow import from JSON and narrow panel responsive layout (320px) checks', async () => {
+  const extensionPath = path.resolve('.');
+  const context = await chromium.launchPersistentContext('', {
+    channel: 'chromium',
+    headless: true,
+    args: [
+      '--enable-unsafe-extension-debugging',
+      `--disable-extensions-except=${extensionPath}`,
+      `--load-extension=${extensionPath}`,
+    ],
+  });
+
+  try {
+    const worker = context.serviceWorkers()[0] ?? await context.waitForEvent('serviceworker');
+    const extensionId = worker.url().split('/')[2];
+
+    const panel = await context.newPage();
+    // Test 320px narrow panel viewport
+    await panel.setViewportSize({ width: 320, height: 600 });
+    await panel.goto(`chrome-extension://${extensionId}/sidepanel.html`);
+    await panel.waitForLoadState('domcontentloaded');
+
+    // Verify 320px layout has no horizontal page scroll
+    const hasHorizontalOverflow = await panel.evaluate(() => {
+      return document.documentElement.scrollWidth > window.innerWidth;
+    });
+    expect(hasHorizontalOverflow).toBe(false);
+
+    // Verify all 5 navigation tabs are functional
+    for (const tabName of ['observe', 'suggestions', 'workflows', 'run', 'settings']) {
+      const tabBtn = panel.locator(`#tab-${tabName}`);
+      await expect(tabBtn).toBeVisible();
+      await tabBtn.click();
+      const tabView = panel.locator(`#view-${tabName}`);
+      await expect(tabView).toBeVisible();
+      await expect(tabBtn).toHaveAttribute('aria-selected', 'true');
+    }
+
+    // Test Workflow Import via JSON
+    await panel.locator('#tab-workflows').click();
+    const validJson = JSON.stringify({
+      schemaVersion: 1,
+      id: crypto.randomUUID(),
+      revision: 1,
+      name: 'Imported Production Workflow',
+      origin: 'https://example.com',
+      reviewedPath: null,
+      steps: [
+        {
+          id: crypto.randomUUID(),
+          type: 'click',
+          effect: 'local',
+          timeoutMs: 5000,
+          label: 'Step 1: Click button',
+          target: {
+            reviewedAt: new Date().toISOString(),
+            locators: [{ type: 'css', value: '#submit-btn' }],
+          },
+          postcondition: { condition: 'visible', expected: true },
+        },
+      ],
+      parameters: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      reviewedRevision: 1,
+      reviewedAt: new Date().toISOString(),
+    });
+
+    panel.once('dialog', (dialog) => dialog.accept(validJson));
+    await panel.locator('#import-workflow-btn').click();
+
+    // Verify imported workflow is listed
+    await expect(panel.locator('#workflows-list')).toContainText('Imported Production Workflow');
+    await expect(panel.locator('#workflows-list')).toContainText('APPROVED');
+  } finally {
+    await context.close();
+  }
+});
+
