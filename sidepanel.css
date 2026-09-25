@@ -96,7 +96,7 @@ footer { text-align: center; margin-top: 24px; color: var(--muted); font-size: 1
 .step-editor-header, .param-editor-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .step-editor-actions { display: flex; gap: 4px; }
 .row-2 { display: flex; gap: 8px; }
-.row-2 > * { flex: 1; }
+.row-2 > * { flex: 1; min-width: 0; }
 .notice-inline { margin-top: 8px; color: var(--muted); font-size: 11px; }
 
 /* Run Progress & Checkpoint */

@@ -490,44 +490,157 @@ function renderEditorSteps() {
 
     row1.append(typeGroup, effectGroup);
 
-    // Target locator row
-    const targetGroup = document.createElement("div");
-    targetGroup.className = "form-group";
-    targetGroup.innerHTML = `<label>CSS Locator / Target</label>`;
-    const targetInput = document.createElement("input");
-    targetInput.type = "text";
-    targetInput.value = step.target?.locators[0]?.value || "";
-    targetInput.addEventListener("input", () => {
-      step.target = step.target || { reviewedAt: new Date().toISOString(), locators: [] };
-      step.target.locators = [{ type: "css", value: targetInput.value }];
-      step.target.reviewedAt = new Date().toISOString();
-    });
-    targetGroup.appendChild(targetInput);
+    // Target locator row or wait condition
+    if (step.type !== "waitFor") {
+      const currentLoc = step.target?.locators?.[0] || { type: "css", value: "" };
+      const locType = currentLoc.type || "css";
 
-    // Parameter binding (for fill/select/setChecked)
-    if (editingWorkflow.parameters.length > 0) {
-      const paramGroup = document.createElement("div");
-      paramGroup.className = "form-group";
-      paramGroup.innerHTML = `<label>Use Parameter</label>`;
-      const paramSelect = document.createElement("select");
-      const emptyOpt = document.createElement("option");
-      emptyOpt.value = "";
-      emptyOpt.textContent = "-- None (Static value) --";
-      paramSelect.appendChild(emptyOpt);
-      for (const p of editingWorkflow.parameters) {
+      const locRow = document.createElement("div");
+      locRow.className = "row-2";
+
+      const locTypeGroup = document.createElement("div");
+      locTypeGroup.className = "form-group";
+      locTypeGroup.innerHTML = `<label>Locator Type</label>`;
+      const locTypeSelect = document.createElement("select");
+      for (const lt of [
+        { val: "css", label: "CSS Selector" },
+        { val: "id", label: "Element ID" },
+        { val: "testAttribute", label: "Test Attribute" },
+        { val: "roleAndName", label: "Role & Name / Text" },
+      ]) {
         const opt = document.createElement("option");
-        opt.value = p.name;
-        opt.textContent = `${p.label} (${p.name})`;
-        if (step.parameter === p.name) opt.selected = true;
-        paramSelect.appendChild(opt);
+        opt.value = lt.val;
+        opt.textContent = lt.label;
+        if (locType === lt.val) opt.selected = true;
+        locTypeSelect.appendChild(opt);
       }
-      paramSelect.addEventListener("change", () => {
-        step.parameter = paramSelect.value || undefined;
+      locTypeGroup.appendChild(locTypeSelect);
+
+      const targetGroup = document.createElement("div");
+      targetGroup.className = "form-group";
+      const targetLabel = document.createElement("label");
+      targetLabel.textContent = locType === "id" ? "Element ID" : locType === "roleAndName" ? "Button/Link Text" : "Locator Value";
+      const targetInput = document.createElement("input");
+      targetInput.type = "text";
+      targetInput.value = currentLoc.value || "";
+      targetGroup.append(targetLabel, targetInput);
+
+      locRow.append(locTypeGroup, targetGroup);
+      item.append(header, row1, locRow);
+
+      let attrGroup = null;
+      if (locType === "testAttribute") {
+        attrGroup = document.createElement("div");
+        attrGroup.className = "form-group";
+        attrGroup.innerHTML = `<label>Attribute Name</label>`;
+        const attrInput = document.createElement("input");
+        attrInput.type = "text";
+        attrInput.value = currentLoc.attributeName || "data-testid";
+        attrInput.addEventListener("input", () => updateLocator());
+        attrGroup.appendChild(attrInput);
+        item.appendChild(attrGroup);
+      }
+
+      function updateLocator() {
+        const t = locTypeSelect.value;
+        const val = targetInput.value.trim();
+        step.target = step.target || { reviewedAt: new Date().toISOString(), locators: [] };
+        const loc = { type: t, value: val || (t === "css" ? "button" : "action") };
+        if (t === "testAttribute") {
+          const attrVal = attrGroup?.querySelector("input")?.value?.trim() || "data-testid";
+          loc.attributeName = attrVal;
+        }
+        step.target.locators = [loc];
+        step.target.reviewedAt = new Date().toISOString();
+      }
+
+      locTypeSelect.addEventListener("change", () => {
+        updateLocator();
+        renderEditorSteps();
       });
-      paramGroup.appendChild(paramSelect);
-      item.append(header, row1, targetGroup, paramGroup);
+
+      targetInput.addEventListener("input", () => {
+        updateLocator();
+      });
     } else {
-      item.append(header, row1, targetGroup);
+      const waitGroup = document.createElement("div");
+      waitGroup.className = "row-2";
+      waitGroup.innerHTML = `
+        <div class="form-group">
+          <label>Condition</label>
+          <select class="wait-cond">
+            <option value="visible"${step.postcondition?.condition === "visible" ? " selected" : ""}>Visible</option>
+            <option value="hidden"${step.postcondition?.condition === "hidden" ? " selected" : ""}>Hidden</option>
+            <option value="enabled"${step.postcondition?.condition === "enabled" ? " selected" : ""}>Enabled</option>
+            <option value="checked"${step.postcondition?.condition === "checked" ? " selected" : ""}>Checked</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Timeout (ms)</label>
+          <input type="number" class="wait-timeout" min="100" max="30000" value="${step.timeoutMs || 5000}">
+        </div>
+      `;
+      waitGroup.querySelector(".wait-cond").addEventListener("change", (e) => {
+        step.postcondition = step.postcondition || { expected: true };
+        step.postcondition.condition = e.target.value;
+      });
+      waitGroup.querySelector(".wait-timeout").addEventListener("input", (e) => {
+        step.timeoutMs = Math.max(100, Math.min(30000, Number(e.target.value) || 5000));
+      });
+      item.append(header, row1, waitGroup);
+    }
+
+    // Value or Parameter binding for input steps (fill, select, setChecked)
+    if (["fill", "select", "setChecked"].includes(step.type)) {
+      const valRow = document.createElement("div");
+      valRow.className = "row-2";
+
+      if (editingWorkflow.parameters.length > 0) {
+        const paramGroup = document.createElement("div");
+        paramGroup.className = "form-group";
+        paramGroup.innerHTML = `<label>Parameter</label>`;
+        const paramSelect = document.createElement("select");
+        const emptyOpt = document.createElement("option");
+        emptyOpt.value = "";
+        emptyOpt.textContent = "-- Static value --";
+        paramSelect.appendChild(emptyOpt);
+        for (const p of editingWorkflow.parameters) {
+          const opt = document.createElement("option");
+          opt.value = p.name;
+          opt.textContent = `${p.label} (${p.name})`;
+          if (step.parameter === p.name) opt.selected = true;
+          paramSelect.appendChild(opt);
+        }
+        paramSelect.addEventListener("change", () => {
+          step.parameter = paramSelect.value || undefined;
+          renderEditorSteps();
+        });
+        paramGroup.appendChild(paramSelect);
+        valRow.appendChild(paramGroup);
+      }
+
+      if (!step.parameter) {
+        const staticGroup = document.createElement("div");
+        staticGroup.className = "form-group";
+        staticGroup.innerHTML = `<label>${step.type === "setChecked" ? "State (true/false)" : "Static Value"}</label>`;
+        const staticInput = document.createElement("input");
+        staticInput.type = step.type === "setChecked" ? "checkbox" : "text";
+        if (step.type === "setChecked") {
+          staticInput.checked = Boolean(step.value ?? true);
+          staticInput.addEventListener("change", () => {
+            step.value = staticInput.checked;
+          });
+        } else {
+          staticInput.value = step.value ?? "";
+          staticInput.addEventListener("input", () => {
+            step.value = staticInput.value;
+          });
+        }
+        staticGroup.appendChild(staticInput);
+        valRow.appendChild(staticGroup);
+      }
+
+      item.appendChild(valRow);
     }
 
     list.appendChild(item);
