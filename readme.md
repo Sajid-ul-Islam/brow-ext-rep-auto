@@ -18,6 +18,7 @@ The runtime targets desktop Chrome 116+ with Manifest V3 and loads directly from
 | [docs/data-model.md](docs/data-model.md) | Implemented schemas, workflow models, and message protocol. |
 | [docs/decisions.md](docs/decisions.md) | Architecture decisions and tradeoffs. |
 | [docs/testing.md](docs/testing.md) | Automated checks, browser evidence, and manual scenarios. |
+| [CHROMEWEBSTORE.md](CHROMEWEBSTORE.md) | Chrome Web Store listing metadata, permissions justifications, and privacy disclosures. |
 
 ## Install and use
 
@@ -47,6 +48,8 @@ The only permissions are `sidePanel`, `storage`, `activeTab`, and `scripting`. T
 
 ```text
 manifest.json          # Root MV3 manifest
+CHROMEWEBSTORE.md      # Web Store metadata and permissions justifications
+icons/                 # Production icons (16px, 48px, 128px PNG)
 background.js          # Browser event adapters & service worker
 observer.js            # Isolated, consent-scoped interaction capture
 executor.js            # Isolated, supervised action execution & target preview

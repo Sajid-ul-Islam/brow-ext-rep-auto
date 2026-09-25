@@ -1,6 +1,6 @@
 # RepeatFlow roadmap
 
-Status: all milestones M0–M5 implemented and verified, 2026-09-23.
+Status: all milestones M0–M5 implemented, tested, and release-ready, 2026-09-25.
 
 ## M0 — Project foundation
 
@@ -38,7 +38,7 @@ Add workflow editing, explicit live target recapture, parameter definitions, loc
 
 Acceptance: users can convert a candidate into a reviewed workflow without needing recorded input values. Invalid steps, executable strings, unknown schema versions, oversized imports, and invalid variable references are rejected. Deleting observations removes candidate evidence without corrupting already saved workflows.
 
-Status: **Completed.** Implemented in [`lib/workflow.js`](../lib/workflow.js) and side panel workflow editor, verified in [`tests/workflow.test.mjs`](../tests/workflow.test.mjs).
+Status: **Completed.** Implemented in [`lib/workflow.js`](../lib/workflow.js) and side panel workflow editor with multi-locator selection and parameter binding, verified in [`tests/workflow.test.mjs`](../tests/workflow.test.mjs).
 
 ## M4 — Supervised replay
 
@@ -46,7 +46,7 @@ Implement current-tab run authorization, input collection, target preview, bound
 
 Acceptance: a supported fixture completes a reviewed workflow; missing/ambiguous/hidden targets pause before action; unknown/external effects wait for explicit step confirmation; cancellation prevents the next action. Browser/document replacement, permission loss, and panel closure stop further actions. Tests verify partial completion and `needsAttention` reporting, with no automatic recovery of uncertain writes.
 
-Status: **Completed.** Implemented in [`executor.js`](../executor.js) and [`lib/coordinator.js`](../lib/coordinator.js), verified in [`tests/coordinator.test.mjs`](../tests/coordinator.test.mjs) and [`tests/browser.spec.js`](../tests/browser.spec.js).
+Status: **Completed.** Implemented in [`executor.js`](../executor.js) and [`lib/coordinator.js`](../lib/coordinator.js), verified in [`tests/coordinator.test.mjs`](../tests/coordinator.test.mjs), [`tests/executor.test.mjs`](../tests/executor.test.mjs), and [`tests/browser.spec.js`](../tests/browser.spec.js).
 
 ## M5 — Browser integration tests and release preparation
 
@@ -54,13 +54,13 @@ Verify the entire observe → suggest → review → preview → run → inspect
 
 Acceptance: no unresolved issue can collect outside consent, leak excluded data, execute without approval, or repeat an uncertain write. Record complete representative runs plus negative cases on Chromium. Check keyboard use, retention/deletion, service-worker restarts, migration failure, offline behavior, and clean extension installation.
 
-Status: **Completed.** Verified via `npm run verify` (`scripts/check.mjs`, `tests/*.test.mjs`, and `tests/browser.spec.js`).
+Status: **Completed.** Verified via `npm run verify` (`scripts/check.mjs`, all 6 test suites in `tests/*.test.mjs`, and 4 Playwright browser integration tests in `tests/browser.spec.js`). Production branding assets in `icons/` and store documentation in [`CHROMEWEBSTORE.md`](../CHROMEWEBSTORE.md).
 
 ## Shared release gates
 
 - `npm run check` passes with zero lint, whitespace, or link errors.
-- `npm test` passes all unit tests for detector, workflow validator, coordinator, protocol, and repository.
-- `npm run test:browser` passes Playwright E2E browser tests on Chromium.
+- `npm test` passes all unit tests for detector, workflow validator, coordinator, executor, protocol, and repository (44 tests across 6 test suites).
+- `npm run test:browser` passes Playwright E2E browser tests on Chromium (4 tests covering setup, live multi-cycle observation and replay, workflow import, and responsive side panel layout).
 - Fail closed on invalid schema, stale scope, unknown outcome, or unavailable storage.
 
 See [testing.md](testing.md) for the verification matrix and [arc.md](arc.md) for technical decisions.

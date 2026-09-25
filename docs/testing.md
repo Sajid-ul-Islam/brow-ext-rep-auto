@@ -40,16 +40,21 @@ Use local fixture pages and synthetic data. Include a harmless local form that c
 
 Keep milestone evidence concrete: revision, browser/version, command or manual scenario, result, and any limitation. The initialization's evidence is recorded here after checks are run. Target budgets and future acceptance criteria in [prd.md](prd.md) and [roadmap.md](roadmap.md) are not measured results.
 
-### Milestone verification log, 2026-09-23
+### Milestone verification log, 2026-09-25 (Release Ready)
 
-- `npm run check` passes: Validates Manifest V3 format, permissions (`sidePanel`, `storage`, `activeTab`, `scripting`), zero external runtime dependencies, local file references, and syntax check across all 18 JS/MJS files and 10 Markdown documents.
-- `npm test` passes (40 tests):
+- `npm run check` passes: Validates Manifest V3 format, icons (`icons/icon-16.png`, `icons/icon-48.png`, `icons/icon-128.png`), permissions (`sidePanel`, `storage`, `activeTab`, `scripting`), zero external runtime dependencies, local file references, and syntax check across all 18 JS/MJS files and 11 Markdown documents.
+- `npm test` passes (44 tests across 6 test suites):
   - `tests/observer.test.mjs`: Consent, authorization, event minimization, epoch/segment boundaries, queue overflows, and lifecycle boundaries.
   - `tests/repository.test.mjs`: Retention (7 days / 10k events / 250 sessions / 1k run summaries), atomic IndexedDB transactions, corruption fail-close behavior.
   - `tests/detector.test.mjs`: Pure normalization, exact 3-repeat contiguous sequences, negative tests (<3 repeats), noise handling, length limits, contained candidate suppression.
   - `tests/workflow.test.mjs`: Declarative schema validation, locator structure, parameter binding, draft conversion from candidates.
   - `tests/coordinator.test.mjs`: Session lifecycle, candidate promotion, workflow CRUD & approval rev-gates, supervised execution, confirmation checkpoints, and crash-recovery `pendingIntent` logging.
-- `npm run test:browser` passes (Playwright with Chromium extension loading):
-  - Launches real unpacked MV3 extension in Chromium.
+  - `tests/executor.test.mjs`: Content script executor actions (`click`, `fill`, `select`, `setChecked`), target resolution order (`testAttribute`, `id`, `css`, `roleAndName`), error conditions (`TARGET_NOT_FOUND`, `TARGET_AMBIGUOUS`, `TARGET_DISABLED`, `TARGET_HIDDEN`), condition polling (`waitFor`), and sender validation.
+- `npm run test:browser` passes (4 Playwright tests with Chromium extension loading):
+  - Launches real unpacked MV3 extension in Chromium with live fixture pages.
   - Verifies side-panel tabbed navigation, setup guide preference, workflow CRUD, candidate conversion, target locator preview against live DOM fixtures, and data management.
+  - Verifies live E2E observer capture of 3 repetitive cycles (12 interactions), candidate detection, conversion to workflow, locator review, and supervised replay with external effect confirmation checkpoint (`#apply-btn`).
+  - Verifies workflow import from exported JSON with full schema validation.
+  - Verifies 320px narrow panel responsive layout with zero horizontal overflow across all side panel tabs.
+- `npm run verify` runs `check`, `test`, and `test:browser` in sequence with 100% pass rate.
 
